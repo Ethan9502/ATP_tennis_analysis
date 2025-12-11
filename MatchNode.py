@@ -8,6 +8,9 @@ individual_record_df = pd.read_csv("individual_record_df.csv")
 with open("model/logistic.pkl", "rb") as f:
     log_model = pickle.load(f)
 
+with open("model/random_forest.pkl", "rb") as f:
+    random_fr = pickle.load(f)
+
 def head_to_head(p1, p2, date):
     past_match = tennis_df[
         (((tennis_df["Player_1"] == p1) | (tennis_df["Player_1"] == p2)) & 
@@ -70,16 +73,19 @@ class GameMatchNode:
         # player_1_win_percentage = log_model.predict_proba(input_df)[0, 1]
         # proba = log_model.predict_proba(input_df)[0]
         # idx_1 = list(log_model.classes_).index(1)
-        proba = log_model.predict_proba(input_df)[0, 1]
-        print(input_df)
-        print("player 1 win percentage:", proba)
+
+        # proba = log_model.predict_proba(input_df)[0, 1]
+
+        proba = random_fr.predict_proba(input_df)[0, 1]
+        # print(input_df)
+        # print("player 1 win percentage:", proba)
         if proba > 0.5:
             self.winner = self.player_1
         else:
             self.winner = self.player_2
 
 print("Classes:", log_model.classes_)
-node = GameMatchNode("Sinner J.", "Musetti L.", 3, 1, 2, 4, "2025-11-23")
+node = GameMatchNode('Jarry N.', 'Sinner J.', 3, 1, 2, 4, "2025-11-23")
 node.deter_winner()
 print(node.winner)
 
