@@ -2,6 +2,10 @@ import pandas as pd
 import random
 from MatchNode import *
 
+class MatchTree:
+    def __init__(self):
+        self.root = None
+
 player_df = pd.read_csv("dataset/modified_espn_atp_rankings.csv")
 player_df = player_df[player_df["Player"] != "Echargui M."]
 current_player_list = player_df["Player"].tolist()
@@ -17,7 +21,7 @@ time = 0
 print(current_player_list)
 print("-----------------------------")
 
-for i in range(100):
+for i in range(1000):
     instance = current_player_list
     for round in round_sequence:
         winner_list = []
@@ -26,6 +30,8 @@ for i in range(100):
             match.deter_winner()
             winner_list.append(match.winner)
         instance = winner_list
+    tree = MatchTree()
+    tree.root = instance[0]
     if instance[0] not in player_winning_time.keys():
         player_winning_time[instance[0]] = 1
     else:

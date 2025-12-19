@@ -3,7 +3,7 @@ import pickle
 
 player_info = pd.read_csv("dataset/espn_atp_rankings.csv")
 tennis_df = pd.read_csv("/Users/chiangethan/.cache/kagglehub/datasets/dissfya/atp-tennis-2000-2023daily-pull/versions/911/atp_tennis.csv")
-individual_record_df = pd.read_csv("individual_record_df.csv")
+individual_record_df = pd.read_csv("dataset/individual_record_df.csv")
 
 with open("model/logistic.pkl", "rb") as f:
     log_model = pickle.load(f)
@@ -47,6 +47,9 @@ class GameMatchNode:
         self.right = right
         self.left = left
         self.winner = None
+
+    def __str__(self):
+        return self.winner
     
     def deter_winner(self):
         p1_df = player_info[player_info["Player"] == self.player_1]
@@ -55,37 +58,39 @@ class GameMatchNode:
         pts_diff = p1_df["Points"].iloc[0] - p2_df["Points"].iloc[0]
         odds_diff = 0
 
-        head_record = None
+        p1_head_record = None
+        p2_head_record = None
         last_time_winner = head_to_head(self.player_1, self.player_2, self.date)
         if last_time_winner == self.player_1:
-            head_record = 1
+            p1_head_record = 1
+            p2_head_record = -1
         elif last_time_winner == self.player_2:
-            head_record = -1
+            p1_head_record = -1
+            p2_head_record = 1
         else: 
-            head_record = 0
+            p1_head_record = 0
+            p2_head_record = 0
 
-        last_10_percentage = find_last_10_game(self.player_1, self.date)
-        
-        #missing last 10 game winning percentage function
-        input_df = pd.DataFrame([{"rank_diff": rank_diff, "pts_diff": pts_diff, "odds_diff": odds_diff, 
+        p1_last_10_percentage = find_last_10_game(self.player_1, self.date)
+        p1_input_df = pd.DataFrame([{"rank_diff": rank_diff, "pts_diff": pts_diff, "odds_diff": odds_diff, 
                                  "series": self.series, "court": self.court, "surface": self.surface, 
-                                 "round": self.round, "head_to_head": head_record, "last_10_percent": last_10_percentage}])
-        # player_1_win_percentage = log_model.predict_proba(input_df)[0, 1]
-        # proba = log_model.predict_proba(input_df)[0]
-        # idx_1 = list(log_model.classes_).index(1)
+                                 "round": self.round, "head_to_head": p1_head_record, "last_10_percent": p1_last_10_percentage}])
+        p1_proba = random_fr.predict_proba(p1_input_df)[0, 1]
 
-        # proba = log_model.predict_proba(input_df)[0, 1]
+        p2_last_10_percentage = find_last_10_game(self.player_2, self.date)
+        p2_input_df = pd.DataFrame([{"rank_diff": rank_diff, "pts_diff": pts_diff, "odds_diff": odds_diff, 
+                                 "series": self.series, "court": self.court, "surface": self.surface, 
+                                 "round": self.round, "head_to_head": p2_head_record, "last_10_percent": p2_last_10_percentage}])
+        p2_proba = random_fr.predict_proba(p2_input_df)[0, 1]
 
-        proba = random_fr.predict_proba(input_df)[0, 1]
-        # print(input_df)
-        # print("player 1 win percentage:", proba)
-        if proba > 0.5:
+        if p1_proba > p2_proba:
             self.winner = self.player_1
         else:
             self.winner = self.player_2
 
-print("Classes:", log_model.classes_)
-node = GameMatchNode('Jarry N.', 'Sinner J.', 3, 1, 2, 4, "2025-11-23")
-node.deter_winner()
-print(node.winner)
+
+# node = GameMatchNode('Jarry N.', 'Sinner J.', 3, 1, 2, 4, "2025-11-23")
+# node.deter_winner()
+# print(node.winner)
+
 
